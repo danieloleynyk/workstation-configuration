@@ -2,8 +2,10 @@
 - name: Configure Workstation Environment
   hosts: localhost
   become: yes
-  vars:
-    username: daniel
+  vars_prompt:
+    - name: username
+      prompt: "Enter Username: "
+      private: no
   tasks:
     - name: Install System Packages
       package:
@@ -77,5 +79,22 @@
           file:
             path: /tmp/code.deb
             state: absent
-
-
+        
+        - name: Install Extensions
+          become: yes
+          become_user: "{{ username }}"
+          command: code --install-extension {{ item }}
+          with_items:
+            - ms-vscode-remote.remote-containers
+            - ms-vscode-remote.vscode-remote-extensionpack
+    
+    - name: Install Spotify
+      block:
+        - name: Add Spotify Repository
+          apt_repository:
+            repo: deb http://repository.spotify.com stable non-free
+            state: present
+        - name: Install Spotify
+          apt:
+            name: spotify-client
+            state: present
